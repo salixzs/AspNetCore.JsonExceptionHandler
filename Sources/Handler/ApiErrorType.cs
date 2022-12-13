@@ -36,6 +36,11 @@ public enum ApiErrorType
     ExternalError = 5,
 
     /// <summary>
+    /// Not implemented functioanlity was invoked.
+    /// </summary>
+    NotImplemented = 9,
+
+    /// <summary>
     /// General security related exception / error.
     /// </summary>
     SecurityError = 10,

@@ -11,15 +11,45 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+    <!-- === NuGet package description properties ===-->
+  <PropertyGroup Label="NuGet properties">
+    <PackageId>Salix.AspNetCore.JsonExceptionHandler</PackageId>
+    <Authors>Anrijs Vitolins;GitHub contributors</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugSymbols>true</DebugSymbols>
+    <PackageTags>aspnet;aspnetcore;api;rest;error;exception;error handler;exception handler;rfc7807</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>utilities.png</PackageIcon>
+    <Description>
+Provides Global Error/Exception Handler (Middleware). Responds with error description and data as Json object. Better StackTrace, details on exception, possibility to control response state (500+, 400+).
+    </Description>
+    <PackageReadmeFile>nuget_readme.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/salixzs/AspNetCore.JsonExceptionHandler</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/salixzs/AspNetCore.JsonExceptionHandler</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <PackageReleaseNotes>
+Extracted as separate package from AspNetCore.Utilities.
+    </PackageReleaseNotes>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../utilities.png" Pack="true" Visible="false" PackagePath="" />
+    <None Include="../../nuget_readme.md" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+
+  <!-- === Dependencies on other NuGet packages (minimum version) ===-->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.8" />
     <PackageReference Include="Salix.StackTracer" Version="1.0.0" />
   </ItemGroup>
-
-  <!--<ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="7.0.0" />
-  </ItemGroup>-->
 
 </Project>

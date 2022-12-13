@@ -14,7 +14,17 @@ namespace Salix.AspNetCore.JsonExceptionHandler
         /// </summary>
         public static IApplicationBuilder AddJsonExceptionHandler(this IApplicationBuilder app)
         {
-            app.UseMiddleware<DefaultJsonExceptionHandler>(new ApiJsonExceptionOptions { OmitSources = new HashSet<string> { "AddJsonExceptionHandler" }, ShowStackTrace = true });
+            app.UseMiddleware<DefaultJsonExceptionHandler>(new ApiJsonExceptionOptions { OmitSources = new HashSet<string> { "DefaultJsonExceptionHandler" }, ShowStackTrace = true });
+            return app;
+        }
+
+        /// <summary>
+        /// Registers given implementation of JSON Exception handler with default options.<br/>
+        /// Normally should use own class based on <see cref="ApiJsonExceptionMiddleware"/> with implemented <see cref="ApiJsonExceptionMiddleware.HandleSpecialException"/> method.
+        /// </summary>
+        public static IApplicationBuilder AddJsonExceptionHandler<THandler>(this IApplicationBuilder app) where THandler : ApiJsonExceptionMiddleware
+        {
+            app.UseMiddleware<THandler>(new ApiJsonExceptionOptions { OmitSources = new HashSet<string> { "JsonExceptionHandler" }, ShowStackTrace = true });
             return app;
         }
 
