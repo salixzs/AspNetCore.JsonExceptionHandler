@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
@@ -139,24 +140,7 @@ public abstract class ApiJsonExceptionMiddleware
 
         // All special exceptions are to be handled by overriding class.
         errorData = this.HandleSpecialException(errorData, exception);
-
-        if (exception.InnerException != null)
-        {
-            errorData.InnerException = $"({exception.InnerException.GetType().Name}) {exception.InnerException.Message}";
-            if (exception.InnerException?.InnerException != null)
-            {
-                var innerInnerException = exception.InnerException.InnerException;
-                var innerInnerExceptionMessages = new List<string>();
-                do
-                {
-                    innerInnerExceptionMessages.Add($"({innerInnerException.GetType().Name}) {innerInnerException.Message}");
-                    innerInnerException = innerInnerException.InnerException;
-                }
-                while (innerInnerException != null);
-                errorData.InnerInnerException = string.Join("; ", innerInnerExceptionMessages);
-            }
-        }
-
+        errorData.InnerException = this.GetInnerExceptionData(exception.InnerException);
         if (_options.ShowStackTrace)
         {
             // As there can be any kind of errors retrieving stack trace
@@ -172,6 +156,16 @@ public abstract class ApiJsonExceptionMiddleware
 
         return errorData;
     }
+
+    private ApiErrorInner? GetInnerExceptionData(Exception? innerException) =>
+        innerException == null
+            ? null
+            : new ApiErrorInner
+            {
+                Title = innerException.Message,
+                ExceptionType = innerException.GetType().Name,
+                InnerException = this.GetInnerExceptionData(innerException.InnerException)
+            };
 
     /// <summary>
     /// Writes the exception as JSON object to requester back asynchronously.

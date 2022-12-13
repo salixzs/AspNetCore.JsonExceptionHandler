@@ -47,8 +47,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             responseError.Should().NotBeNull();
             responseError.ErrorType.Should().Be(ApiErrorType.ServerError);
             responseError.ExceptionType.Should().Be("ApplicationException");
-            responseError.InnerException.Should().BeNullOrEmpty();
-            responseError.InnerInnerException.Should().BeNullOrEmpty();
+            responseError.InnerException.Should().BeNull();
             responseError.Status.Should().Be(500);
             responseError.Title.Should().Be("Testable problem");
             responseError.StackTrace.Should().NotBeEmpty();
@@ -71,7 +70,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             try
             {
                 // To get stack trace
-                var prepared = new ApplicationException("Testable problem", new Exception("Goin' deeper"));
+                var prepared = new ApplicationException("Testable problem", new ArgumentException("Goin' deeper"));
                 throw prepared;
             }
             catch (ApplicationException e)
@@ -94,8 +93,10 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             ApiError responseError = JsonSerializer.Deserialize<ApiError>(responseString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Converters = { new JsonStringEnumConverter() } });
 
             // Assert
-            responseError.InnerException.Should().Be("(Exception) Goin' deeper");
-            responseError.InnerInnerException.Should().BeNullOrEmpty();
+            responseError.InnerException.Should().NotBeNull();
+            responseError.InnerException.Title.Should().Be("Goin' deeper");
+            responseError.InnerException.ExceptionType.Should().Be("ArgumentException");
+            responseError.InnerException.InnerException.Should().BeNull();
         }
 
         [Fact]
@@ -131,8 +132,10 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             // Assert
             context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
             responseError.Should().NotBeNull();
-            responseError.InnerException.Should().Be("(Exception) Goin' deeper");
-            responseError.InnerInnerException.Should().Be("(Exception) Very deep");
+            responseError.InnerException.Should().NotBeNull();
+            responseError.InnerException.Title.Should().Be("Goin' deeper");
+            responseError.InnerException.InnerException.Should().NotBeNull();
+            responseError.InnerException.InnerException.Title.Should().Be("Very deep");
         }
 
         [Fact]
@@ -168,8 +171,8 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             // Assert
             context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
             responseError.Should().NotBeNull();
-            responseError.InnerException.Should().Be("(Exception) Inner");
-            responseError.InnerInnerException.Should().Be("(Exception) 1; (Exception) 2; (Exception) 3; (Exception) 4");
+            //responseError.InnerException.Should().Be("(Exception) Inner");
+            //responseError.InnerInnerException.Should().Be("(Exception) 1; (Exception) 2; (Exception) 3; (Exception) 4");
         }
 
         [Fact]
@@ -207,8 +210,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             responseError.Should().NotBeNull();
             responseError.ErrorType.Should().Be(ApiErrorType.DataValidationError);
             responseError.ExceptionType.Should().Be("TestDataValidationException");
-            responseError.InnerException.Should().BeNullOrEmpty();
-            responseError.InnerInnerException.Should().BeNullOrEmpty();
+            responseError.InnerException.Should().BeNull();
             responseError.Status.Should().Be(400);
             responseError.Title.Should().Be("Data validation problem.");
             responseError.StackTrace.Should().NotBeEmpty();
@@ -305,8 +307,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             responseError.Should().NotBeNull();
             responseError.ErrorType.Should().Be(ApiErrorType.CancelledOperation);
             responseError.ExceptionType.Should().Be("TaskCanceledException");
-            responseError.InnerException.Should().BeNullOrEmpty();
-            responseError.InnerInnerException.Should().BeNullOrEmpty();
+            responseError.InnerException.Should().BeNull();
             responseError.Status.Should().Be(422);
             responseError.Title.Should().Be("Task was canceled");
             responseError.StackTrace.Should().NotBeEmpty();

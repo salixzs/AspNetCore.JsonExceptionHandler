@@ -49,13 +49,7 @@ public class ApiError
     /// <summary>
     /// Inner exception message, if such exists.
     /// </summary>
-    public string? InnerException { get; set; }
-
-    /// <summary>
-    /// Inner exception message of Inner exception, if such exists.
-    /// Also adds up any further inner exception messages recursively.
-    /// </summary>
-    public string? InnerInnerException { get; set; }
+    public ApiErrorInner? InnerException { get; set; }
 
     /// <summary>
     /// Top Stack trace frames (only own code - omitted .Net internal and 3rd party library exceptions, which can be found in logging).
