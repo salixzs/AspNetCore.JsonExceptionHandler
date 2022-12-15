@@ -7,6 +7,10 @@ Implementing provided abstract class with simplistic your own middleware gives a
 [![Nuget version](https://img.shields.io/nuget/v/Salix.AspNetCore.JsonExceptionHandler.svg)](https://www.nuget.org/packages/Salix.AspNetCore.JsonExceptionHandler/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Salix.AspNetCore.JsonExceptionHandler.svg)](https://www.nuget.org/packages/Salix.AspNetCore.JsonExceptionHandler/) (since 15-Dec-2022)
 
+#### If you use or like...
+
+Cosider "star" this project and/or better\
+<a href="https://www.buymeacoffee.com/salixzs" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 32px !important;width: 146px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 ## Usage
 
