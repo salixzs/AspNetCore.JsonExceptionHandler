@@ -3,6 +3,10 @@ Production (and Debug) replacement for `app.UseDeveloperExceptionPage()`.
 Exception handler middleware in ASP.NET (API solutions mainly) to get exception as JSON object with rfc7807 standard proposal in mind.
 Implementing provided abstract class with simplistic your own middleware gives ability to handle specific exceptions and control retuerned state codes (400+; 500+) with Json data payload, describing error situation and throw exception(s).
 
+[![Build & Tests](https://github.com/salixzs/AspNetCore.JsonExceptionHandler/actions/workflows/build_test.yml/badge.svg?branch=main)](https://github.com/salixzs/AspNetCore.JsonExceptionHandler/actions/workflows/build_test.yml)
+[![Nuget version](https://img.shields.io/nuget/v/Salix.AspNetCore.JsonExceptionHandler.svg)](https://www.nuget.org/packages/Salix.AspNetCore.JsonExceptionHandler/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Salix.AspNetCore.JsonExceptionHandler.svg)](https://www.nuget.org/packages/Salix.AspNetCore.JsonExceptionHandler/) (since 15-Dec-2022)
+
 
 ## Usage
 
