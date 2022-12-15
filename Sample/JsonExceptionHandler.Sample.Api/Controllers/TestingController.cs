@@ -5,17 +5,8 @@ namespace JsonExceptionHandler.Sample.Api.Controllers
     [ApiController]
     public class TestingController : ControllerBase
     {
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public TestingController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
-
         [HttpGet("/test/throw")]
-        public IEnumerable<WeatherForecast> Throw()
-        {
-            throw new NotImplementedException("Should be returned as JSON.");
-        }
+        public IEnumerable<WeatherForecast> Throw() =>
+            throw new ApplicationException("Should be returned in Json", new ArgumentNullException("Inner exception is added.", new NotImplementedException("Cause is not implemeneted yet.")));
     }
 }

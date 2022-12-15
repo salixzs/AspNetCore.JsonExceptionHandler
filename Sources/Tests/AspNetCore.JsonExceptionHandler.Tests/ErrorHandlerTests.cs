@@ -45,7 +45,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             responseString.Should().NotContain("ErrorBehavior");
             context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
             responseError.Should().NotBeNull();
-            responseError.ErrorType.Should().Be(ApiErrorType.ServerError);
+            responseError!.ErrorType.Should().Be(ApiErrorType.ServerError);
             responseError.ExceptionType.Should().Be("ApplicationException");
             responseError.InnerException.Should().BeNull();
             responseError.Status.Should().Be(500);
@@ -93,8 +93,8 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             ApiError responseError = JsonSerializer.Deserialize<ApiError>(responseString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Converters = { new JsonStringEnumConverter() } });
 
             // Assert
-            responseError.InnerException.Should().NotBeNull();
-            responseError.InnerException.Title.Should().Be("Goin' deeper");
+            responseError!.InnerException.Should().NotBeNull();
+            responseError.InnerException!.Title.Should().Be("Goin' deeper");
             responseError.InnerException.ExceptionType.Should().Be("ArgumentException");
             responseError.InnerException.InnerException.Should().BeNull();
         }
@@ -132,10 +132,10 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             // Assert
             context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
             responseError.Should().NotBeNull();
-            responseError.InnerException.Should().NotBeNull();
-            responseError.InnerException.Title.Should().Be("Goin' deeper");
+            responseError!.InnerException.Should().NotBeNull();
+            responseError.InnerException!.Title.Should().Be("Goin' deeper");
             responseError.InnerException.InnerException.Should().NotBeNull();
-            responseError.InnerException.InnerException.Title.Should().Be("Very deep");
+            responseError.InnerException.InnerException!.Title.Should().Be("Very deep");
         }
 
         [Fact]
@@ -275,7 +275,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
         public async Task CanceledTask_NoLog()
         {
             // Arrange
-            TaskCanceledException exc = null;
+            TaskCanceledException exc = new TaskCanceledException("Initial");
             try
             {
                 // To get stack trace
@@ -305,7 +305,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             responseString.Should().NotContain("ErrorBehavior");
             context.Response.StatusCode.Should().Be((int)HttpStatusCode.UnprocessableEntity);
             responseError.Should().NotBeNull();
-            responseError.ErrorType.Should().Be(ApiErrorType.CancelledOperation);
+            responseError!.ErrorType.Should().Be(ApiErrorType.CancelledOperation);
             responseError.ExceptionType.Should().Be("TaskCanceledException");
             responseError.InnerException.Should().BeNull();
             responseError.Status.Should().Be(422);
@@ -326,7 +326,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
     [ExcludeFromCodeCoverage]
     public class TestExceptionMiddleware : ApiJsonExceptionMiddleware
     {
-        public TestExceptionMiddleware(Microsoft.AspNetCore.Http.RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, bool showStackTrace = false) : base(next, logger, showStackTrace)
+        public TestExceptionMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, bool showStackTrace = false) : base(next, logger, showStackTrace)
         {
         }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
@@ -140,6 +139,7 @@ public abstract class ApiJsonExceptionMiddleware
 
         // All special exceptions are to be handled by overriding class.
         errorData = this.HandleSpecialException(errorData, exception);
+
         errorData.InnerException = this.GetInnerExceptionData(exception.InnerException);
         if (_options.ShowStackTrace)
         {

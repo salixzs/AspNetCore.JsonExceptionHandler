@@ -5,7 +5,15 @@ VisualStudioVersion = 17.5.33103.201
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Salix.AspNetCore.JsonExceptionHandler", "Sources\Handler\Salix.AspNetCore.JsonExceptionHandler.csproj", "{0A37AA35-1ACF-4FFC-873A-77F7FDAA8E05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonExceptionHandler.Tests", "Sources\Tests\AspNetCore.JsonExceptionHandler.Tests\JsonExceptionHandler.Tests.csproj", "{0F682823-78B1-460E-A649-C0B6BFE3A5F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonExceptionHandler.Tests", "Sources\Tests\AspNetCore.JsonExceptionHandler.Tests\JsonExceptionHandler.Tests.csproj", "{0F682823-78B1-460E-A649-C0B6BFE3A5F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{E3D239B0-B84A-43E2-A04A-3C34AC13342B}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build_test.yml = .github\workflows\build_test.yml
+		nuget_readme.md = nuget_readme.md
+		.github\workflows\publish_nuget.yml = .github\workflows\publish_nuget.yml
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

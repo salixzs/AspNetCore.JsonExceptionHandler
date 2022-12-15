@@ -1,145 +1,188 @@
-# Salix.AspNetCore.Utilities
-A collection of additional functionality to Asp.Net Core framework for building better APIs.
+# AspNetCore.JsonExceptionHandler
+Production (and Debug) replacement for `app.UseDeveloperExceptionPage()`.
+Exception handler middleware in ASP.NET (API solutions mainly) to get exception as JSON object with rfc7807 standard proposal in mind.
+Implementing provided abstract class with simplistic your own middleware gives ability to handle specific exceptions and control retuerned state codes (400+; 500+) with Json data payload, describing error situation and throw exception(s).
 
-There are few functionality extensions provided in package, allowing to better handle some task implementations when creating REST API in Asp.net Core framework.
 
-These include:
+## Usage
 
-* **Global Exception handler** (Json error) 
-* **Health check formatter**
-* **[ConfigurationValidation](https://github.com/salixzs/ConfigurationValidation) handlers**
-* **Home page & Health page** (w/o full MVC stack)
+Package includes most basic implementation of abstract class, ready to use right away, which can be wired up by adding `app.AddJsonExceptionHandler();` into `program.cs` (or `startup.cs` if you use older approach).\
+This will return state code 500 with Json object.
 
-Package is built on .Net Standard 2.0. It is tested by using within Asp.Net Core 5 (on .Net 5) API. [Sample solution](https://github.com/salixzs/AspNetCore.Utilities/tree/main/Samples/Sample.AspNet5) is available in GitHub repository.
+More advanced way is to add your own middleware based on provided abstract base class as in this example (example mimics included default middleware):
 
-### Global error handler
-
-Allows exceptions to be returned to API calling parties as JSON structure, adding some additional information on its type and causes (incl. CallStack when API runs in development mode). This allows to get these 400 & 500 Http Status code errors with additional information, somewhat complying to [IETF rfc7807](https://tools.ietf.org/html/rfc7807) proposed standard. Here is example on how error is returned when exception is thrown somewhere in API:
-```json
+```csharp
+/// <summary>
+/// Own middleware with provided base middleware class.
+/// </summary>
+public class ApiJsonErrorMiddleware : ApiJsonExceptionMiddleware
 {
-  "type": "ServerError",
-  "title": "This is thrown on purpose.",
-  "status": 500,
-  "requestedUrl": "/api/sample/exception",
-  "errorType": 1,
-  "exceptionType": "ApplicationException",
-  "innerException": null,
-  "innerInnerException": null,
-  "stackTrace": [
-    "at FaultyLogic() in Sample.AspNet5.Logic\\SampleLogic.cs: line 18",
-    "at ThrowException() in Sample.AspNet5.Api\\Services\\HomeController.cs: line 110",
-    "at Invoke(HttpContext httpContext) in Source\\Salix.ExceptionHandling\\ApiJsonExceptionMiddleware.cs: line 56"
-  ],
-  "validationErrors": []
+    // use either this simplified constructor
+    public ApiJsonErrorMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, bool showStackTrace)
+        : base(next, logger, showStackTrace)
+    {
+    }
+    
+    // or use this constructor to supply extended options
+    public ApiJsonErrorMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, ApiJsonExceptionOptions options)
+        : base(next, logger, options)
+    {
+    }
 }
 ```
-(Stack trace is not shown when API runs in production (configurable)).
 
-Provided functionalities can handle other types of exceptions differently, like `NotImplementedException`, `DataValidationException` and any other specific exception.
+After it is created, you can register it in API `Program.cs` (or `Startup.cs` `Configure` method) like this (somewhere in the very beginning setup for ­`app`):
 
-See [more extensive documentation](https://github.com/salixzs/AspNetCore.Utilities/blob/main/Documentation/GlobalErrorHandler.md) on how to use this functionality.
+```csharp
+// When used constructor with options and relaying on default settings:
+app.AddJsonExceptionHandler<ApiJsonErrorMiddleware>();
+
+// When used constructor with boolean:
+app.AddJsonExceptionHandler<ApiJsonErrorMiddleware>(true);
+
+// When used with options setting:
+app.AddJsonExceptionHandler<ApiJsonErrorMiddleware>(new ApiJsonExceptionOptions { OmitSources = new HashSet<string> { "SomeMiddleware" }, ShowStackTrace = true });
+```
+
+The only parameter in simple constructor controls whether StackTrace is shown to consumer.\
+In example above we control it by environment variable and then it is shown during API development, but hidden in any other environment. If you put constant true/false in stead - it is either shown always or hidden always.
+
+For options - you can set the same `showStackTrace` boolean and also specify list of stack trace frames to be filtered out from being shown. It is `OmitSources` property, containing list (HashSet) of strings, which should not be a part of file path in stack trace frame.
+For example, if you set it to `new HashSet<string> { "middleware" }`, it will filter out all middleware components (given they have string "middleware" in their file name or in path).
+
+### Custom exception handling
+If you want to handle (return data on) some specific exceptions, then you should override `HandleSpecialException` method from base class. There you can check whether exception is of this special type and modify returned Json data structure accordingly:
+
+```csharp
+/// <summary>
+/// This method is called from base class handler to add more information to Json Error object.
+/// Here all special exception types should be handled, so API Json Error returns appropriate data.
+/// </summary>
+/// <param name="apiError">ApiError object, which gets returned from API in case of exception/error. Provided by </param>
+/// <param name="exception">Exception which got bubbled up from somewhere deep in API logic.</param>
+protected override ApiError HandleSpecialException(ApiError apiError, Exception exception)
+{
+    // When using FluentValidation, could use also handler for its ValidationException in stead of this custom one
+    if (exception is SampleDataValidationException validationException)
+    {
+        apiError.Status = 400; // or 422
+        apiError.ErrorType = ApiErrorType.DataValidationError;
+        apiError.ValidationErrors
+            .AddRange(
+                validationException.ValidationErrors.Select(failure =>
+                    new ApiDataValidationError
+                    {
+                        Message = failure.ValidationMessage,
+                        PropertyName = failure.PropertyName,
+                        AttemptedValue = failure.AppliedValue
+                    }));
+    }
+
+    if (exception is AccessViolationException securityException)
+    {
+        apiError.Status = 401; // or 403
+        apiError.ErrorType = ApiErrorType.AccessRestrictedError;
+    }
+
+    if (exception is SampleDatabaseException dbException)
+    {
+        apiError.Status = 500;
+        if (dbException.ErrorType == DatabaseProblemType.WrongSyntax)
+        {
+            apiError.ErrorType = ApiErrorType.StorageError;
+        }
+    }
+
+    if (exception is NotImplementedException noImplemented)
+    {
+        apiError.Status = 501;
+        apiError.Title = "Functionality is not yet implemented.";
+    }
+    
+    if (exception is OperationCanceledException operationCanceledException)
+    {
+        // This returns empty (200) response and does not log error.
+        apiError.ErrorBehavior = ApiErrorBehavior.Ignore;
+    }
+
+    return apiError;
+}
+```
 
 
-### Health check formatter
-Custom formatter for Asp.Net HealthCheck functionalities, extending it to include additional information, like configuration values and other information which might help immediately pinpoint problem when health check is returning Degraded or Unhealthy responses. 
-
-Example response:
+In case of data validation exceptions, when they are handled fully (as shown in example above), Json property `validationErrors` is provided:
 
 ```json
 {
-    "status": "Healthy",
-    "checks": [
+    "type": "DataValidationError",
+    "title": "There are validation errors.",
+    "status": 400,
+    "requestedUrl": "/api/sample/validation",
+    "errorType": 3,
+    "exceptionType": "SampleDataValidationException",
+    "innerException": {
+      "title": "Some inner exception",
+      "exceptionType": "ArgumentNullException",
+      "innerException": {
+        "title": "Deepest inner exception",
+        "exceptionType": "NotImplementedException",
+        "innerException": null
+      }
+    },
+    "stackTrace": [
+        "at ValidationError() in Sample.AspNet5.Logic\\SampleLogic.cs: line 50",
+        "at ThrowValidationException() in Sample.AspNet5.Api\\Services\\HomeController.cs: line 117",
+        "at Invoke(HttpContext httpContext) in Source\\Salix.ExceptionHandling\\ApiJsonExceptionMiddleware.cs: line 56"
+    ],
+    "validationErrors": [
         {
-            "key": "Database",
-            "status": "Healthy",
-            "description": "Database is OK.",
-            "exception": null,
-            "data": [
-                {
-                    "key": "ConnString",
-                    "value": "Connection string (shown only in developer mode)"
-                }
-            ]
+            "propertyName": "Name",
+            "attemptedValue": "",
+            "message": "Missing/Empty"
         },
         {
-            "key": "ExtApi",
-            "status": "Healthy",
-            "description": "ExtAPI is OK.",
-            "exception": null,
-            "data": [
-                {
-                    "key": "ExtApi URL",
-                    "value": "https://extapi.com/api"
-                },
-                {
-                    "key": "User",
-                    "value": "username from config"
-                },
-                {
-                    "key": "Password",
-                    "value": "password from config"
-                },
-                {
-                    "key": "Token",
-                    "value": "Secret token from config"
-                }
-            ]
+            "propertyName": "Id",
+            "attemptedValue": null,
+            "message": "Cannot be null"
+        },
+        {
+            "propertyName": "Description",
+            "attemptedValue": "Lorem Ipsum very long...",
+            "message": "Text is too long"
+        },
+        {
+            "propertyName": "Birthday",
+            "attemptedValue": "2054-06-22T23:55:26.1708087+03:00",
+            "message": "Cannot be in future"
         }
     ]
 }
 ```
 
-See [more extensive documentation](https://github.com/salixzs/AspNetCore.Utilities/blob/main/Documentation/HealthCheckFormatter.md) on how to use this functionality.
+## Behavior control
+By default Json error handler will write exception to configured `ILogger` instance (you control where and how it writes - AppInsights, File, Debug, Console etc.)\
+and also creates Json error response and returns it to caller with specified HttpStatus code (400+, 500+).
 
-### [ConfigurationValidation](https://github.com/salixzs/ConfigurationValidation) handlers
+If you use custom exception handler method, you can intercept specific exceptions and make error handler do not write an error statement to `ILogger` and/or return Json error object at all (returns 200 status code with empty response).
 
-Extends configuration class validations, provided by package [ConfigurationValidation](https://www.nuget.org/packages/ConfigurationValidation/) ([Repo](https://github.com/salixzs/ConfigurationValidation)).
+To control it, in specific exception handling method, intercept your special exception and set `ApiError` object property `ErrorBehavior` to desired behavior.
 
-It implements necessary registration extensions for your configuration classes and three different handlers of validation results.
+```csharp
+if (exception is OperationCanceledException operationCanceledException)
+{
+    // This returns empty (200) response and does not log error.
+    apiError.ErrorBehavior = ApiErrorBehavior.Ignore;
+}
 
-#### IStartupFilter
-Checks configuration objects during app startup and throws exception (preventing app from starting up).
-
-#### Configuration Error page
-Implemented as middleware component, similar to "UseDeveloperErrorPage", which returns "yellow screen of death" for your application when configuration validation failed. Application itself will not work, but you can see in browser (when open app in it) this error page.
-
-![Configuration error page](https://raw.githubusercontent.com/salixzs/AspNetCore.Utilities/main/Documentation/config-error.jpg)
-
-#### HealthCheck
-Standard Asp.Net HealthCheck solution to include in application health checking routines.
-
-See [more extensive documentation](https://github.com/salixzs/AspNetCore.Utilities/blob/main/Documentation/ConfigurationValidation.md) on how to use this functionality.
-
-### Root page
-
-Default Asp.Net API provides no visible output when its root URL is open in browser. If there is no default controller for root path, it returns 404 (not found) error. 
-
-Salix.AspNetCore.Utilites include simple page renderer to show some technical and monitoring/troubleshooting information, which can be used in HomeController Index action. 
-
-It does not require full MVC stack (views, razor) to have them, so API stays in controller-only mode.
-
-Here is example of such page from Sample solution with all bells and whistles:
-
-![Root page example](https://raw.githubusercontent.com/salixzs/AspNetCore.Utilities/main/Documentation/root-page.JPG)
-
-
-### Health check / test page
-
-**NOTE:** This functionality should be implemented *only* if you have at least one HelathCheck implemented.
-ASP.NET HealthCheck provides only JSON endpoint for health checking, but looking at HealthCheck Json output can be problematic for human eye to grasp necessary information right away. This page can provide visual colored cues for such overview, something like this:
-
-![Health check and testing page](https://raw.githubusercontent.com/salixzs/AspNetCore.Utilities/main/Documentation/health-check-page.JPG)
-
-See [more extensive documentation](https://github.com/salixzs/AspNetCore.Utilities/blob/main/Documentation/Pages.md) on how to use this functionality.
-
-
-## How to use
-
-You add `Salix.AspNetCore.Utilities` package to asp.net project use Visual Studio NuGet manager or from command line:
-```plaintext
-PM> Install-Package Salix.AspNetCore.Utilities
+if (exception is TaskCanceledException taskCanceledException)
+{
+    // This does not log error, but still returns Json error.
+    apiError.ErrorBehavior = ApiErrorBehavior.RespondWithError;
+    apiError.Status = (int)HttpStatusCode.UnprocessableEntity; // or other by your design
+    apiError.ErrorType = ApiErrorType.CancelledOperation;
+}
 ```
 
+It could come handy to ignore user canceled operations when using async code with CancellationToken.
 
-## Release notes
-Available [in this link](https://github.com/salixzs/AspNetCore.Utilities/blob/main/Documentation/ReleaseNotes.md).
+#### That's basically it. Happy error handling!
