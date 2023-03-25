@@ -208,7 +208,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests
             // Assert
             context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
             responseError.Should().NotBeNull();
-            responseError.ErrorType.Should().Be(ApiErrorType.DataValidationError);
+            responseError!.ErrorType.Should().Be(ApiErrorType.DataValidationError);
             responseError.ExceptionType.Should().Be("TestDataValidationException");
             responseError.InnerException.Should().BeNull();
             responseError.Status.Should().Be(400);
@@ -391,8 +391,8 @@ namespace AspNetCore.JsonExceptionHandler.Tests
     [ExcludeFromCodeCoverage]
     public class TestValidatedProperty
     {
-        public string PropertyName { get; set; }
-        public string ValidationMessage { get; set; }
-        public object AppliedValue { get; set; }
+        public string? PropertyName { get; set; }
+        public string? ValidationMessage { get; set; }
+        public object? AppliedValue { get; set; }
     }
 }
