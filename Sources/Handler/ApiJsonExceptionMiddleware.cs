@@ -33,7 +33,7 @@ public abstract class ApiJsonExceptionMiddleware
     /// Pass constant "true" to show stack trace always.
     /// </param>
     /// <exception cref="ArgumentNullException">Next step is not defined (should not ever happen).</exception>
-    public ApiJsonExceptionMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, bool showStackTrace = false)
+    protected ApiJsonExceptionMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, bool showStackTrace = false)
     {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         this.Logger = logger;
@@ -44,7 +44,6 @@ public abstract class ApiJsonExceptionMiddleware
         _options.OmitSources.Add("ApiJsonExceptionMiddleware.cs");
     }
 
-
     /// <summary>
     /// Middleware for intercepting unhandled exceptions and returning error object with appropriate status code.
     /// </summary>
@@ -52,7 +51,7 @@ public abstract class ApiJsonExceptionMiddleware
     /// <param name="logger">The logger.</param>
     /// <param name="options">Set options for Error Handling.</param>
     /// <exception cref="ArgumentNullException">Next step is not defined (should not ever happen).</exception>
-    public ApiJsonExceptionMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, ApiJsonExceptionOptions options)
+    protected ApiJsonExceptionMiddleware(RequestDelegate next, ILogger<ApiJsonExceptionMiddleware> logger, ApiJsonExceptionOptions options)
     {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         this.Logger = logger;
@@ -106,7 +105,7 @@ public abstract class ApiJsonExceptionMiddleware
                 await WriteExceptionAsync(
                     httpContext,
                     errorObject,
-                    errorObject.Status > 399 ? errorObject.Status : errorObject.ErrorType == ApiErrorType.DataValidationError ? 400 : 500)
+                    errorObject.Status > 399 ? errorObject.Status : (errorObject.ErrorType == ApiErrorType.DataValidationError ? 400 : 500))
                     .ConfigureAwait(false);
             }
         }
@@ -134,7 +133,7 @@ public abstract class ApiJsonExceptionMiddleware
             Title = exception.Message,
             ExceptionType = exception.GetType().Name,
             ErrorType = ApiErrorType.ServerError,
-            Status = statusCode.HasValue && statusCode.Value > 399 ? statusCode.Value : 500
+            Status = statusCode > 399 ? statusCode.Value : 500
         };
 
         // All special exceptions are to be handled by overriding class.
@@ -150,7 +149,7 @@ public abstract class ApiJsonExceptionMiddleware
             }
             catch (Exception ex)
             {
-                errorData.StackTrace = new List<string> { "Error getting original stack trace: " + ex.Message };
+                errorData.StackTrace = ["Error getting original stack trace: " + ex.Message];
             }
         }
 
@@ -178,7 +177,11 @@ public abstract class ApiJsonExceptionMiddleware
         var response = context.Response;
         response.ContentType = "application/json";
         response.StatusCode = responseCode;
-        response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = null;
+        var reason = response.HttpContext.Features.Get<IHttpResponseFeature>();
+        if (reason != null)
+        {
+            reason.ReasonPhrase = null;
+        }
 
         response.Headers.Clear();
         response.Headers[HeaderNames.CacheControl] = "no-cache";
@@ -207,8 +210,7 @@ public abstract class ApiJsonExceptionMiddleware
             return frames;
         }
 
-        var stackTrace = exception.ParseStackTrace(new StackTracerOptions { SkipFramesWithoutLineNumber = true, SkipFramesContaining = omitContaining });
-        foreach (var frame in stackTrace)
+        foreach (var frame in exception.ParseStackTrace(new StackTracerOptions { SkipFramesWithoutLineNumber = true, SkipFramesContaining = omitContaining }))
         {
             frames.Add(frame.ToString());
         }

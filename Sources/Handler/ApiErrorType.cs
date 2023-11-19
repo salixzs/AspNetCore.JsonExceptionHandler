@@ -36,7 +36,7 @@ public enum ApiErrorType
     ExternalError = 5,
 
     /// <summary>
-    /// Not implemented functioanlity was invoked.
+    /// Not implemented functionality was invoked.
     /// </summary>
     NotImplemented = 9,
 
@@ -51,6 +51,11 @@ public enum ApiErrorType
     AccessRestrictedError = 11,
 
     /// <summary>
+    /// Error when it is clear network connection was disconnected or otherwise interrupted.
+    /// </summary>
+    NetworkError = 18,
+
+    /// <summary>
     /// Any general storage/database error.
     /// </summary>
     StorageError = 20,
@@ -62,7 +67,7 @@ public enum ApiErrorType
 
     /// <summary>
     /// Exception [types] returned by some components,<br/>
-    /// usually in async approaches vith CancellationToken usage<br/>
+    /// usually in async approaches with CancellationToken usage<br/>
     /// where operation can be cancelled.
     /// </summary>
     CancelledOperation = 30,

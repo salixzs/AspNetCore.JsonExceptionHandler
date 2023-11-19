@@ -27,6 +27,7 @@ jobs:
         dotnet-version: |
           6.x
           7.x
+          8.x
     - name: Build
       run: dotnet build -c Release Sources/Handler/Salix.AspNetCore.JsonExceptionHandler.csproj
 

@@ -45,7 +45,7 @@ app.AddJsonExceptionHandler<ApiJsonErrorMiddleware>(new ApiJsonExceptionOptions 
 ```
 
 The only parameter in simple constructor controls whether StackTrace is shown to consumer.\
-In example above we control it by environment variable and then it is shown during API development, but hidden in any other environment. If you put constant true/false in stead - it is either shown always or hidden always.
+In example above we can control it by environment variable so it is shown during API development, but hidden in any other environment. If you put constant true/false in stead - it is either shown always or hidden always.
 
 For options - you can set the same `showStackTrace` boolean and also specify list of stack trace frames to be filtered out from being shown. It is `OmitSources` property, containing list (HashSet) of strings, which should not be a part of file path in stack trace frame.
 For example, if you set it to `new HashSet<string> { "middleware" }`, it will filter out all middleware components (given they have string "middleware" in their file name or in path).
@@ -159,7 +159,7 @@ In case of data validation exceptions, when they are handled fully (as shown in 
 }
 ```
 
-## Behavior control
+## Behaviour control
 By default Json error handler will write exception to configured `ILogger` instance (you control where and how it writes - AppInsights, File, Debug, Console etc.)\
 and also creates Json error response and returns it to caller with specified HttpStatus code (400+, 500+).
 
@@ -183,6 +183,6 @@ if (exception is TaskCanceledException taskCanceledException)
 }
 ```
 
-It could come handy to ignore user canceled operations when using async code with CancellationToken.
+It could come handy to ignore user cancelled operations when using async code with CancellationToken.
 
 #### That's basically it. Happy error handling!
