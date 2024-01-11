@@ -12,6 +12,11 @@ Implementing provided abstract class with simplistic your own middleware gives a
 Cosider "star" this project and/or better\
 <a href="https://www.buymeacoffee.com/salixzs" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 32px !important;width: 146px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
+See also other packages for some other/related functionality in Asp.Net Core (mostly APIs):
+- [API dynamic FrontPage (with binaries versioning approaches)](https://www.nuget.org/packages/Salix.AspNetCore.FrontPage/)
+- [Health check with JSON result + Health page](https://www.nuget.org/packages/Salix.AspNetCore.HealthCheck/)
+- [Configuration validation](https://www.nuget.org/packages/ConfigurationValidation.AspNetCore/)
+
 ## Usage
 
 Package includes most basic implementation of abstract class, ready to use right away, which can be wired up by adding `app.AddJsonExceptionHandler();` into `program.cs` (or `startup.cs` if you use older approach).\

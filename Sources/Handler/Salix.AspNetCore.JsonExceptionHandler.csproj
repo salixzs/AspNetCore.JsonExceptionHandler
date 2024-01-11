@@ -32,11 +32,11 @@ Provides Global Error/Exception Handler (Middleware). Responds with error descri
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <PackageReleaseNotes>
-Added target for .Net 8.0. Added exception type of NetworkException.
+Dependency NuGet updates.
     </PackageReleaseNotes>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,11 +47,11 @@ Added target for .Net 8.0. Added exception type of NetworkException.
   <!-- === Dependencies on other NuGet packages (minimum version) ===-->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.6.2">
+    <PackageReference Include="Roslynator.Analyzers" Version="4.9.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Salix.StackTracer" Version="1.0.1" />
+    <PackageReference Include="Salix.StackTracer" Version="1.1.0" />
   </ItemGroup>
 
 </Project>
