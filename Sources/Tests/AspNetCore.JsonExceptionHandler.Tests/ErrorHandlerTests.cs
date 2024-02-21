@@ -11,7 +11,7 @@ namespace AspNetCore.JsonExceptionHandler.Tests;
 [ExcludeFromCodeCoverage]
 public class ApiJsonExceptionMiddlewareTests
 {
-    private JsonSerializerOptions _jsonSerializerOptions;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public ApiJsonExceptionMiddlewareTests() =>
         _jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Converters = { new JsonStringEnumConverter() } };

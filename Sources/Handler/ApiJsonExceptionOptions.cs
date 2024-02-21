@@ -15,9 +15,9 @@ public sealed class ApiJsonExceptionOptions
 
     /// <summary>
     /// List of path names or file names to filter out from StackTrace frame list.
+    /// <code>
+    /// options.OmitSources = ["middleware", "LoggingBehaviour", "AbstractValidator.cs", "_validate.cs"]
+    /// </code>
     /// </summary>
-    /// <example>
-    /// options.OmitSources
-    /// </example>
-    public HashSet<string> OmitSources { get; set; } = new();
+    public HashSet<string> OmitSources { get; set; } = [];
 }

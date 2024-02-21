@@ -32,11 +32,11 @@ Provides Global Error/Exception Handler (Middleware). Responds with error descri
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <PackageReleaseNotes>
-Dependency NuGet updates.
+For .Net 8+ created ApiJsonExceptionHandler as IExceptionHandler implementation to use as global error handler, returning Json Error object. ApiError can be used in union-type Results for minimal APIs.
     </PackageReleaseNotes>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,7 +47,7 @@ Dependency NuGet updates.
   <!-- === Dependencies on other NuGet packages (minimum version) ===-->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.9.0">
+    <PackageReference Include="Roslynator.Analyzers" Version="4.10.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

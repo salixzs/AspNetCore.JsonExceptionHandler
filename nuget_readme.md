@@ -185,4 +185,59 @@ if (exception is TaskCanceledException taskCanceledException)
 
 It could come handy to ignore user cancelled operations when using async code with CancellationToken.
 
+
+
+# IExceptionHandler (.Net 8.0+)
+
+Since .Net 8.0 there is additional way to handle global exceptions in ASP.NET framework by implementing
+one or more IExceptionHandler implementations.
+See <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-8.0#iexceptionhandler">MS Docs</a>.
+
+This package provides implementation for this approach and it can be used in this way:
+
+Create class, deriving from `ApiJsonExceptionHandler` (which implements IExceptionHandler interface in it)
+
+```csharp
+internal sealed class GlobalExceptionHandler : ApiJsonExceptionHandler
+{
+    public GlobalExceptionHandler(ILogger<ApiJsonExceptionHandler> logger)
+        : base(logger, new ApiJsonExceptionOptions { ShowStackTrace = true })
+    {
+    }
+
+    // If you want to handle some exceptions more precise...
+    protected override ApiError HandleSpecialException(ApiError apiError, Exception exception)
+    {
+        if (exception is AccessViolationException securityException)
+        {
+            apiError.Status = 401; // or 403
+            apiError.ErrorType = ApiErrorType.AccessRestrictedError;
+        }
+
+        if (exception is SampleDatabaseException dbException)
+        {
+            apiError.Status = 500;
+            if (dbException.ErrorType == DatabaseProblemType.WrongSyntax)
+            {
+                apiError.ErrorType = ApiErrorType.StorageError;
+            }
+        }
+    }
+}
+```
+
+Then register this class with dependency injection container in program.cs
+
+```csharp
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+```
+
+and register middleware:
+
+```csharp
+app.UseExceptionHandler(_ => { });
+```
+
+Options and Error behaviour is to be handled the same way as described above for Error handling middleware.
+
 #### That's basically it. Happy error handling!

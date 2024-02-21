@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
-using Salix.StackTracer;
 
 namespace Salix.AspNetCore.JsonExceptionHandler;
 
@@ -16,6 +15,9 @@ public abstract class ApiJsonExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ApiJsonExceptionOptions _options;
+    private readonly ApiErrorFactory _apiErrorFactory = new();
+
+    private static readonly JsonSerializerOptions ErrorSerializationOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 
     /// <summary>
     /// Logger instance.
@@ -81,8 +83,12 @@ public abstract class ApiJsonExceptionMiddleware
                 throw;
             }
 
-            var errorObject = this.CreateErrorObject(exc, httpContext.Response?.StatusCode);
+            //var errorObject = this.CreateErrorObject(exc, httpContext.Response?.StatusCode);
+            var errorObject = _apiErrorFactory.CreateErrorObject(exc, httpContext.Response?.StatusCode);
             errorObject.RequestedUrl = httpContext.Features.Get<IHttpRequestFeature>()?.RawTarget ?? httpContext.Request?.Path.ToString();
+            errorObject = HandleSpecialException(errorObject, exc);
+            errorObject = _apiErrorFactory.AddInnerExceptions(errorObject, exc);
+            errorObject = _apiErrorFactory.AddStackTrace(errorObject, exc, _options);
 
             if (errorObject.ErrorBehavior.HasFlag(ApiErrorBehavior.LogError))
             {
@@ -122,51 +128,6 @@ public abstract class ApiJsonExceptionMiddleware
     protected virtual ApiError HandleSpecialException(ApiError apiError, Exception exception) => apiError;
 
     /// <summary>
-    /// Creates the error data object from exception.
-    /// </summary>
-    /// <param name="exception">The exception which caused problems.</param>
-    /// <param name="statusCode">The initial response status code.</param>
-    private ApiError CreateErrorObject(Exception exception, int? statusCode)
-    {
-        var errorData = new ApiError
-        {
-            Title = exception.Message,
-            ExceptionType = exception.GetType().Name,
-            ErrorType = ApiErrorType.ServerError,
-            Status = statusCode > 399 ? statusCode.Value : 500
-        };
-
-        // All special exceptions are to be handled by overriding class.
-        errorData = this.HandleSpecialException(errorData, exception);
-
-        errorData.InnerException = this.GetInnerExceptionData(exception.InnerException);
-        if (_options.ShowStackTrace)
-        {
-            // As there can be any kind of errors retrieving stack trace
-            try
-            {
-                errorData.StackTrace = GetStackTrace(exception, _options.OmitSources);
-            }
-            catch (Exception ex)
-            {
-                errorData.StackTrace = ["Error getting original stack trace: " + ex.Message];
-            }
-        }
-
-        return errorData;
-    }
-
-    private ApiErrorInner? GetInnerExceptionData(Exception? innerException) =>
-        innerException == null
-            ? null
-            : new ApiErrorInner
-            {
-                Title = innerException.Message,
-                ExceptionType = innerException.GetType().Name,
-                InnerException = this.GetInnerExceptionData(innerException.InnerException)
-            };
-
-    /// <summary>
     /// Writes the exception as JSON object to requester back asynchronously.
     /// </summary>
     /// <param name="context">The HTTP context (where Request and Response resides).</param>
@@ -194,27 +155,6 @@ public abstract class ApiJsonExceptionMiddleware
             response.Body.SetLength(0L);
         }
 
-        await response.WriteAsync(JsonSerializer.Serialize(errorData, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
-    }
-
-    /// <summary>
-    /// Gets the stack trace of exception in suitable format.
-    /// </summary>
-    /// <param name="exception">The exception.</param>
-    /// <param name="omitContaining">List of partial strings, which will act as filter to skip frames containing these strings.</param>
-    private static List<string> GetStackTrace(Exception exception, HashSet<string> omitContaining)
-    {
-        var frames = new List<string>();
-        if (exception == null)
-        {
-            return frames;
-        }
-
-        foreach (var frame in exception.ParseStackTrace(new StackTracerOptions { SkipFramesWithoutLineNumber = true, SkipFramesContaining = omitContaining }))
-        {
-            frames.Add(frame.ToString());
-        }
-
-        return frames;
+        await response.WriteAsync(JsonSerializer.Serialize(errorData, ErrorSerializationOptions));
     }
 }

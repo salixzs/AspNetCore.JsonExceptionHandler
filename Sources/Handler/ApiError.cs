@@ -1,5 +1,10 @@
 using System.Diagnostics;
+using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Metadata;
 
 namespace Salix.AspNetCore.JsonExceptionHandler;
 
@@ -8,7 +13,11 @@ namespace Salix.AspNetCore.JsonExceptionHandler;
 /// Used mainly by Global Error Handling middleware.
 /// </summary>
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-public class ApiError
+#if NET8_0_OR_GREATER
+public class ApiError : IResult, IEndpointMetadataProvider
+#else
+public class ApiError : IResult
+#endif
 {
     /// <summary>
     /// Type or error response.
@@ -70,6 +79,21 @@ public class ApiError
     /// </summary>
     [JsonIgnore]
     public ApiErrorBehavior ErrorBehavior { get; set; } = ApiErrorBehavior.LogAndThrowError;
+
+    /// <inheritdoc/>
+    public Task ExecuteAsync(HttpContext httpContext)
+    {
+        httpContext.Response.StatusCode = Status;
+        return httpContext.Response.WriteAsJsonAsync(this, new JsonSerializerOptions { WriteIndented = true }, "application/problem+json");
+    }
+
+#if NET8_0_OR_GREATER
+    public static void PopulateMetadata(MethodInfo _, EndpointBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        builder.Metadata.Add(new ProducesResponseTypeMetadata(500, typeof(ApiError), ["application/problem+json"]));
+    }
+#endif
 
     /// <summary>
     /// Displays object main properties in Debug screen. (Only for development purposes).
